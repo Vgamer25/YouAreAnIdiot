@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You Are An Idiot! (Safe Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: white;
+            transition: background-color 0.05s ease-in-out;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .content-box {
+            text-align: center;
+            z-index: 100;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.95);
+            border: 6px solid black;
+            box-shadow: 15px 15px 0px black;
+            position: relative;
+            min-width: 400px;
+        }
+
+        .idiot-text {
+            font-size: 4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+        /* Virtual Pop-up Windows */
+        .virtual-window {
+            position: absolute;
+            width: 300px;
+            height: 200px;
+            border: 3px solid black;
+            background: white;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            pointer-events: none;
+            animation: bounce 2s infinite alternate ease-in-out;
+        }
+
+        @keyframes bounce {
+            from { transform: translate(0, 0); }
+            to { transform: translate(10px, 10px); }
+        }
+
+        .flash-black { background-color: black !important; color: white !important; }
+    </style>
+</head>
+<body>
+
+    <div class="content-box">
+        <div id="display-text" class="idiot-text">YOU ARE AN IDIOT!</div>
+        <div class="text-3xl font-bold mb-8">☺ ☺ ☺</div>
+        
+        <div class="flex justify-center">
+            <button id="startBtn" class="px-8 py-4 bg-black text-white text-xl font-black hover:bg-gray-800 transition-colors transform hover:scale-105">
+                START
+            </button>
+            <button id="stopBtn" class="hidden px-8 py-4 bg-red-600 text-white text-xl font-black border-4 border-black hover:bg-red-700 transition-colors transform hover:scale-105">
+                STOP THE MADNESS
+            </button>
+        </div>
+    </div>
+
+    <div id="popup-container"></div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const body = document.body;
+        const popupContainer = document.getElementById('popup-container');
+        
+        let flashInterval;
+        let popupInterval;
+        let isRunning = false;
+        let safetyTimeout;
+        let spawnedWindows = [];
+        const SAFETY_DELAY = 5000; // Updated to 5 seconds
+        const apiKey = ""; 
+
+        function resetSafetyTimer() {
+            if (!isRunning) return;
+            clearTimeout(safetyTimeout);
+            safetyTimeout = setTimeout(() => {
+                stopExperience();
+            }, SAFETY_DELAY);
+        }
+
+        function spawnPopups() {
+            if (!isRunning) return;
+            
+            createVirtualPopup();
+
+            try {
+                const w = 400;
+                const h = 300;
+                const x = Math.random() * (window.screen.width - w);
+                const y = Math.random() * (window.screen.height - h);
+                const newWin = window.open('about:blank', '_blank', `width=${w},height=${h},left=${x},top=${y},menubar=no,status=no,toolbar=no`);
+                
+                if (newWin) {
+                    spawnedWindows.push(newWin);
+                    newWin.document.write(`
+                        <title>IDIOT!</title>
+                        <body style="background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; overflow:hidden; margin:0;">
+                            <h1 style="font-size:4rem; margin:0; font-weight:900;">IDIOT!</h1>
+                            <p style="font-size:6rem; margin:0;">☺</p>
+                            <script>
+                                setInterval(() => { 
+                                    const isBlack = document.body.style.backgroundColor === 'black';
+                                    document.body.style.backgroundColor = isBlack ? 'white' : 'black'; 
+                                    document.body.style.color = isBlack ? 'black' : 'white'; 
+                                }, 100);
+                            <\/script>
+                        </body>
+                    `);
+                }
+            } catch (e) {
+                console.warn("Real popup blocked by browser settings.");
+            }
+        }
+
+        function createVirtualPopup() {
+            const popup = document.createElement('div');
+            popup.className = 'virtual-window';
+            popup.innerHTML = `
+                <div style="background:black; color:white; width:100%; padding:2px; font-size:10px; position:absolute; top:0; font-weight:bold;">IDIOT.EXE</div>
+                <div class="text-3xl font-black">IDIOT!</div>
+                <div class="text-4xl">☺</div>
+            `;
+            const x = Math.random() * (window.innerWidth - 300);
+            const y = Math.random() * (window.innerHeight - 200);
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+            popup.style.transform = `rotate(${(Math.random() - 0.5) * 30}deg)`;
+            popupContainer.appendChild(popup);
+        }
+
+        async function playIdiotSound() {
+            if (!isRunning) return;
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Say cheerfully: You are an idiot! Ha ha ha ha ha ha ha ha ha!" }] }],
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
+                        }
+                    })
+                });
+                const result = await response.json();
+                const audioData = result.candidates[0].content.parts[0].inlineData.data;
+                const binaryString = atob(audioData);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+                
+                const sampleRate = 24000; 
+                const wavHeader = new ArrayBuffer(44);
+                const view = new DataView(wavHeader);
+                view.setUint32(0, 0x52494646, false); view.setUint32(4, 36 + len, true);
+                view.setUint32(8, 0x57415645, false); view.setUint32(12, 0x666d7420, false); 
+                view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); 
+                view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+                view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+                view.setUint32(36, 0x64617461, false); view.setUint32(40, len, true);
+                
+                const blob = new Blob([wavHeader, bytes], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                audio.onended = () => { if (isRunning) playIdiotSound(); };
+                audio.play();
+            } catch (error) { console.error("Audio error:", error); }
+        }
+
+        function startFlash() {
+            flashInterval = setInterval(() => { body.classList.toggle('flash-black'); }, 100);
+        }
+
+        function stopExperience() {
+            isRunning = false;
+            clearInterval(flashInterval);
+            clearInterval(popupInterval);
+            clearTimeout(safetyTimeout);
+            
+            popupContainer.innerHTML = '';
+            
+            spawnedWindows.forEach(win => {
+                if (win && !win.closed) win.close();
+            });
+            spawnedWindows = [];
+            
+            body.classList.remove('flash-black');
+            stopBtn.classList.add('hidden');
+            startBtn.classList.remove('hidden');
+            window.removeEventListener('mousemove', resetSafetyTimer);
+        }
+
+        startBtn.addEventListener('click', () => {
+            isRunning = true;
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            startFlash();
+            playIdiotSound();
+            
+            for(let i=0; i<3; i++) spawnPopups();
+            popupInterval = setInterval(spawnPopups, 1000);
+            
+            resetSafetyTimer();
+            window.addEventListener('mousemove', resetSafetyTimer);
+        });
+
+        stopBtn.addEventListener('click', stopExperience);
+    </script>
+</body>
+</html>
