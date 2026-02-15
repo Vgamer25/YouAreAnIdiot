@@ -37,28 +37,6 @@
             margin-bottom: 1rem;
         }
 
-        /* Virtual Pop-up Windows */
-        .virtual-window {
-            position: absolute;
-            width: 300px;
-            height: 200px;
-            border: 3px solid black;
-            background: white;
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            pointer-events: none;
-            animation: bounce 2s infinite alternate ease-in-out;
-        }
-
-        @keyframes bounce {
-            from { transform: translate(0, 0); }
-            to { transform: translate(10px, 10px); }
-        }
-
         .flash-black { background-color: black !important; color: white !important; }
     </style>
 </head>
@@ -78,20 +56,17 @@
         </div>
     </div>
 
-    <div id="popup-container"></div>
-
     <script>
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
         const body = document.body;
-        const popupContainer = document.getElementById('popup-container');
         
         let flashInterval;
         let popupInterval;
         let isRunning = false;
         let safetyTimeout;
         let spawnedWindows = [];
-        const SAFETY_DELAY = 5000; // Updated to 5 seconds
+        const SAFETY_DELAY = 5000; 
         const apiKey = ""; 
 
         function resetSafetyTimer() {
@@ -102,14 +77,12 @@
             }, SAFETY_DELAY);
         }
 
-        function spawnPopups() {
+        function spawnRealPopup() {
             if (!isRunning) return;
-            
-            createVirtualPopup();
 
             try {
-                const w = 400;
-                const h = 300;
+                const w = 350;
+                const h = 250;
                 const x = Math.random() * (window.screen.width - w);
                 const y = Math.random() * (window.screen.height - h);
                 const newWin = window.open('about:blank', '_blank', `width=${w},height=${h},left=${x},top=${y},menubar=no,status=no,toolbar=no`);
@@ -118,9 +91,9 @@
                     spawnedWindows.push(newWin);
                     newWin.document.write(`
                         <title>IDIOT!</title>
-                        <body style="background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; overflow:hidden; margin:0;">
-                            <h1 style="font-size:4rem; margin:0; font-weight:900;">IDIOT!</h1>
-                            <p style="font-size:6rem; margin:0;">☺</p>
+                        <body style="background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; overflow:hidden; margin:0; cursor:none;">
+                            <h1 style="font-size:3rem; margin:0; font-weight:900; text-align:center;">YOU ARE AN IDIOT!</h1>
+                            <p style="font-size:5rem; margin:0;">☺</p>
                             <script>
                                 setInterval(() => { 
                                     const isBlack = document.body.style.backgroundColor === 'black';
@@ -136,22 +109,6 @@
             }
         }
 
-        function createVirtualPopup() {
-            const popup = document.createElement('div');
-            popup.className = 'virtual-window';
-            popup.innerHTML = `
-                <div style="background:black; color:white; width:100%; padding:2px; font-size:10px; position:absolute; top:0; font-weight:bold;">IDIOT.EXE</div>
-                <div class="text-3xl font-black">IDIOT!</div>
-                <div class="text-4xl">☺</div>
-            `;
-            const x = Math.random() * (window.innerWidth - 300);
-            const y = Math.random() * (window.innerHeight - 200);
-            popup.style.left = `${x}px`;
-            popup.style.top = `${y}px`;
-            popup.style.transform = `rotate(${(Math.random() - 0.5) * 30}deg)`;
-            popupContainer.appendChild(popup);
-        }
-
         async function playIdiotSound() {
             if (!isRunning) return;
             try {
@@ -159,7 +116,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Say cheerfully: You are an idiot! Ha ha ha ha ha ha ha ha ha!" }] }],
+                        contents: [{ parts: [{ text: "Say cheerfully and rhythmically: You are an idiot! Ha ha ha ha ha ha ha ha ha!" }] }],
                         generationConfig: {
                             responseModalities: ["AUDIO"],
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
@@ -201,8 +158,7 @@
             clearInterval(popupInterval);
             clearTimeout(safetyTimeout);
             
-            popupContainer.innerHTML = '';
-            
+            // Close all spawned real windows
             spawnedWindows.forEach(win => {
                 if (win && !win.closed) win.close();
             });
@@ -221,8 +177,14 @@
             startFlash();
             playIdiotSound();
             
-            for(let i=0; i<3; i++) spawnPopups();
-            popupInterval = setInterval(spawnPopups, 1000);
+            // Initial burst of real windows
+            for(let i=0; i<4; i++) {
+                setTimeout(spawnRealPopup, i * 200);
+            }
+            
+            // Continue spawning real windows every 1.5 seconds 
+            // (Increased slightly to prevent immediate browser crashes/throttling)
+            popupInterval = setInterval(spawnRealPopup, 1500);
             
             resetSafetyTimer();
             window.addEventListener('mousemove', resetSafetyTimer);
